@@ -4,16 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon proxy.js"
+    "start": "node proxy.js",
+    "dev": "nodemon proxy.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Antti Mattila",
+  "license": "MIT",
   "dependencies": {
-    "dotenv": "^4.0.0",
-    "hapi": "^17.2.0",
-    "json-server": "^0.12.1",
-    "nodemon": "^1.14.11",
-    "superagent": "^3.8.2"
+    "dotenv": "4.0.0",
+    "hapi": "17.2.0",
+    "nodemon": "1.14.11",
+    "superagent": "3.8.2"
   }
 }

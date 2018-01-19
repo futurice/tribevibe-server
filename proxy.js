@@ -4,6 +4,7 @@ const superagent = require("superagent");
 
 const server = Hapi.server({ port: process.env.PORT || 3001 });
 
+// http://localhost:3001/engagement?groupNames=Tammerforce&dates=2017-12-01,2018-01-01
 server.route({
   method: "GET",
   path: "/engagement",
