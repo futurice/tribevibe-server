@@ -17,7 +17,7 @@ server.route({
         dates: request.query.dates.split(",")
       });
 
-    return response.body;
+    return h.response(response.body).header("Access-Control-Allow-Origin", "*");
   }
 });
 
