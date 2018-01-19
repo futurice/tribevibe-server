@@ -1,0 +1,19 @@
+{
+  "name": "tribevibe-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon proxy.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "hapi": "^17.2.0",
+    "json-server": "^0.12.1",
+    "nodemon": "^1.14.11",
+    "superagent": "^3.8.2"
+  }
+}
