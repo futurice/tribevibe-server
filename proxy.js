@@ -1,6 +1,7 @@
 require("dotenv").config();
 const Hapi = require("hapi");
 const superagent = require("superagent");
+const dashboard = require("./dashboard");
 
 const server = Hapi.server({ port: process.env.PORT || 3001 });
 
@@ -18,6 +19,14 @@ server.route({
       });
 
     return h.response(response.body).header("Access-Control-Allow-Origin", "*");
+  }
+});
+
+server.route({
+  method: "GET",
+  path: "/dashboard",
+  handler: (request, h) => {
+    return h.response(dashboard).header("Access-Control-Allow-Origin", "*");
   }
 });
 
