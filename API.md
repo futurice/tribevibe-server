@@ -10,21 +10,23 @@ Returns
 
 ```json
 {
-  "metrics": {
-    "engagement": {
+  "metrics": [
+    {
+      "id": "engagement",
       "name": "Engagement",
       "values": [
         7.8, 7.7, 6.7, 6.5, 7.5
       ]
     },
-    "happiness": {
+    {
+      "id": "happiness",
       "name": "Happiness",
       "values": [
         7.8, 7.7, 6.7, 6.5, 7.5
       ]
     }
     ...
-  },
+  ],
   "feedback": {
     "dateCreated": "2018-01-02",
     "question": "What kind of support would you like to receive to help you deal with stress at work?",
