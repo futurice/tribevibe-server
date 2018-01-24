@@ -39,6 +39,25 @@
         "description": "Feedbacks"
       }
     },
+    "/api/engagement": {
+      "get": {
+        "tags": [
+          "Vibe"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Engagements"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TribevibeWeb.VibeController.engagement",
+        "description": "Engagement"
+      }
+    },
     "/api/dashboard/{group}": {
       "get": {
         "tags": [
@@ -97,7 +116,7 @@
       "type": "array",
       "title": "Values",
       "items": {
-        "type": "double"
+        "type": "number"
       },
       "description": "A collection metric values"
     },
@@ -235,6 +254,33 @@
       },
       "description": "A single feedback question"
     },
+    "Engagements": {
+      "type": "array",
+      "title": "Engagements",
+      "items": {
+        "$ref": "#/definitions/Engagement"
+      },
+      "description": "A collection engagements of each tribe"
+    },
+    "Engagement": {
+      "type": "object",
+      "title": "Engagement",
+      "properties": {
+        "value": {
+          "type": "number",
+          "description": "Tribe engagement amount, 0.0 - 10.0"
+        },
+        "name": {
+          "type": "string",
+          "description": "Tribe name"
+        }
+      },
+      "example": {
+        "value": 9.8,
+        "name": "Tammerforce"
+      },
+      "description": "A single engagement statistic"
+    },
     "Dashboard": {
       "type": "object",
       "title": "Dashboard",
@@ -246,6 +292,10 @@
         "feedback": {
           "description": "Random feedback",
           "$ref": "#/definitions/Feedback"
+        },
+        "engagements": {
+          "description": "Current tribe engagement levels",
+          "$ref": "#/definitions/Engagements"
         }
       },
       "description": "Dashboard displaying random feedback and metrics"

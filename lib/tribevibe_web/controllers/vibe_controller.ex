@@ -34,8 +34,26 @@ defmodule TribevibeWeb.VibeController do
         description "A collection metric values"
         type :array
         items %{
-          type: :double
+          type: :number
         }
+      end,
+      Engagement: swagger_schema do
+        title "Engagement"
+        description "A single engagement statistic"
+        properties do
+          name :string, "Tribe name"
+          value :number, "Tribe engagement amount, 0.0 - 10.0"
+        end
+        example %{
+          name: "Tammerforce",
+          value: 9.8
+        }
+      end,
+      Engagements: swagger_schema do
+        title "Engagements"
+        description "A collection engagements of each tribe"
+        type :array
+        items Schema.ref(:Engagement)
       end,
       Metric: swagger_schema do
         title "Metric"
@@ -92,6 +110,7 @@ defmodule TribevibeWeb.VibeController do
         title "Dashboard"
         description "Dashboard displaying random feedback and metrics"
         properties do
+          engagements Schema.ref(:Engagements), "Current tribe engagement levels"
           metrics Schema.ref(:Metrics), "Weekly metrics"
           feedback Schema.ref(:Feedback), "Random feedback"
         end
@@ -135,10 +154,14 @@ defmodule TribevibeWeb.VibeController do
     response 200, "OK", Schema.ref(:Dashboard)
   end
   def dashboard_group(conn, %{"group" => group}) do
+    engagements = Core.fetch_tribe_engagements([group])
     feedback = Core.fetch_random_feedback(group)
     metrics = Core.fetch_metrics(group)
 
-    render(conn, "dashboard.json", dashboard: %{feedback: feedback, metrics: metrics})
+    render(conn, "dashboard.json", dashboard: %{
+      feedback: feedback,
+      metrics: metrics,
+      engagements: engagements})
   end
 
   swagger_path :groups do
