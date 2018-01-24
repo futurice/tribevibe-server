@@ -118,10 +118,14 @@ defmodule TribevibeWeb.VibeController do
     response 200, "OK", Schema.ref(:Dashboard)
   end
   def dashboard_all(conn, _params) do
-    feedback = Core.fetch_random_feedback()
+    engagements = Core.fetch_tribe_engagements()
     metrics = Core.fetch_metrics()
+    feedback = Core.fetch_random_feedback()
 
-    render(conn, "dashboard.json", dashboard: %{feedback: feedback, metrics: metrics})
+    render(conn, "dashboard.json", dashboard: %{
+      feedback: feedback,
+      metrics: metrics,
+      engagements: engagements})
   end
 
   swagger_path :dashboard_group do
@@ -157,5 +161,16 @@ defmodule TribevibeWeb.VibeController do
     feedbacks = Core.fetch_feedbacks
 
     render(conn, "feedbacks.json", feedbacks: feedbacks)
+  end
+
+  swagger_path :engagement do
+    get "/api/engagement"
+    description "Engagement"
+    response 200, "OK", Schema.ref(:Engagements)
+  end
+  def engagement(conn, _params) do
+    engagements = Core.fetch_tribe_engagements()
+
+    render(conn, "engagements.json", engagements: engagements)
   end
 end

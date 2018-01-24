@@ -77,6 +77,32 @@ defmodule Tribevibe.Core do
   end
 
   @doc """
+  Fetches current tribe engagements from Officevibe API
+  """
+  def fetch_tribe_engagements(groups \\ fetch_groups()) do
+    url = "#{System.get_env("OFFICEVIBE_API_URL")}/v2/engagement"
+    token = System.get_env("OFFICEVIBE_API_TOKEN")
+    headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json"]
+    params = %{
+      dates: [
+        "2018-01-24"
+      ],
+      groupNames: groups
+    }
+
+    case HTTPoison.post(url, Poison.encode!(params), headers) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        format_tribe_engagements(body)
+      {:ok, %HTTPoison.Response{status_code: 404}} ->
+        Logger.error("Failed to fetch groups")
+        []
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        Logger.error("API error with groups: #{inspect reason}")
+        reason
+    end
+  end
+
+  @doc """
   Fetches metrics from Officevibe API
   """
   def fetch_metrics(_group \\ "Tammerforce") do
@@ -121,6 +147,17 @@ defmodule Tribevibe.Core do
       %{id: head["id"],
         name: head["displayName"],
         values: Enum.reduce(weeklyMetrics, [], fn(%{"value" => value}, acc) -> [value | acc] end)}
+    end)
+  end
+
+  defp format_tribe_engagements(body) do
+    body
+    |> Poison.decode!
+    |> Map.get("data")
+    |> Map.get("weeklyReports")
+    |> Enum.map(fn(%{"metricsValues" => metricsValues, "groupName" => groupName}) ->
+      %{name: groupName,
+        value: Map.get(Enum.find(metricsValues, fn(%{"id" => id} = _metric) -> id === "Engagement" end), "value", 0)}
     end)
   end
 end

@@ -26,6 +26,7 @@ defmodule TribevibeWeb.Router do
     get "/dashboard/:group", VibeController, :dashboard_group
     get "/groups", VibeController, :groups
     get "/feedback", VibeController, :feedback
+    get "/engagement", VibeController, :engagement
   end
 
   scope "/api/swagger" do

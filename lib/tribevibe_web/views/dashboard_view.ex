@@ -8,7 +8,8 @@ defmodule TribevibeWeb.DashboardView do
   end
 
   def render("dashboard.json", %{dashboard: dashboard}) do
-    %{metrics: dashboard.metrics,
+    %{engagements: render_many(dashboard.engagements, DashboardView, "engagement.json"),
+      metrics: dashboard.metrics,
       feedback: render_one(dashboard.feedback, DashboardView, "feedback.json")
     }
   end
@@ -20,5 +21,10 @@ defmodule TribevibeWeb.DashboardView do
       tags: feedback["tags"],
       replies: render_many(feedback["replies"], DashboardView, "reply.json")
     }
+  end
+
+  def render("engagement.json", %{dashboard: engagement}) do
+    %{name: engagement.name,
+      value: engagement.value}
   end
 end
