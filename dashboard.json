@@ -1,4 +1,34 @@
 {
+  "engagements": [
+    {
+      "name": "Tammerforce",
+      "value": 9.8
+    },
+    {
+      "name": "Inna",
+      "value": 9.4
+    },
+    {
+      "name": "Tribe Four",
+      "value": 9.0
+    },
+    {
+      "name": "Stockholm",
+      "value": 8.6
+    },
+    {
+      "name": "London",
+      "value": 8.2
+    },
+    {
+      "name": "Vesa",
+      "value": 8
+    },
+    {
+      "name": "Avalon",
+      "value": 7.8
+    }
+  ],
   "metrics": [
     {
       "id": "Engagement",
