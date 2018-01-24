@@ -1,0 +1,254 @@
+{
+  "swagger": "2.0",
+  "paths": {
+    "/api/groups": {
+      "get": {
+        "tags": [
+          "Vibe"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Groups"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TribevibeWeb.VibeController.groups",
+        "description": "Groups"
+      }
+    },
+    "/api/feedback": {
+      "get": {
+        "tags": [
+          "Vibe"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Feedbacks"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TribevibeWeb.VibeController.feedback",
+        "description": "Feedbacks"
+      }
+    },
+    "/api/dashboard/{group}": {
+      "get": {
+        "tags": [
+          "Vibe"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Dashboard"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "x-example": 3,
+            "type": "integer",
+            "required": true,
+            "name": "group",
+            "in": "path",
+            "description": "Group ID"
+          }
+        ],
+        "operationId": "TribevibeWeb.VibeController.dashboard_group",
+        "description": "Dashboard for single group"
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": [
+          "Vibe"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Dashboard"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [],
+        "operationId": "TribevibeWeb.VibeController.dashboard_all",
+        "description": "Dashboard for all company values"
+      }
+    }
+  },
+  "info": {
+    "version": "1.0",
+    "title": "Tribevibe"
+  },
+  "host": "localhost:4000",
+  "definitions": {
+    "Values": {
+      "type": "array",
+      "title": "Values",
+      "items": {
+        "type": "double"
+      },
+      "description": "A collection metric values"
+    },
+    "Tags": {
+      "type": "array",
+      "title": "Tags",
+      "items": {
+        "type": "string"
+      },
+      "description": "A collection feedback tags"
+    },
+    "Reply": {
+      "type": "object",
+      "title": "Reply",
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "Reply message"
+        },
+        "dateCreated": {
+          "type": "string",
+          "format": "ISO-8601",
+          "description": "Timestamp of reply"
+        }
+      },
+      "description": "A single feedback question"
+    },
+    "Replies": {
+      "type": "array",
+      "title": "Replies",
+      "items": {
+        "$ref": "#/definitions/Reply"
+      },
+      "description": "A collection feedback replies"
+    },
+    "Metrics": {
+      "type": "array",
+      "title": "Metrics",
+      "items": {
+        "$ref": "#/definitions/Metric"
+      },
+      "description": "A collection metrics"
+    },
+    "Metric": {
+      "type": "object",
+      "title": "Metric",
+      "properties": {
+        "values": {
+          "description": "Weekly metric values",
+          "$ref": "#/definitions/Values"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the metric"
+        },
+        "id": {
+          "type": "string",
+          "description": "ID of a metric"
+        }
+      },
+      "example": {
+        "values": [
+          7.2,
+          7.2,
+          7.2,
+          7.1,
+          7.3
+        ],
+        "name": "Happiness",
+        "id": "MG-7"
+      },
+      "description": "A single metric statistic"
+    },
+    "Groups": {
+      "type": "array",
+      "title": "Groups",
+      "items": {
+        "type": "string"
+      },
+      "example": [
+        "Tammerforce",
+        "Avalon",
+        "Stockholm"
+      ],
+      "description": "A collection groupsNames"
+    },
+    "Feedbacks": {
+      "type": "array",
+      "title": "Feedbacks",
+      "items": {
+        "$ref": "#/definitions/Feedback"
+      },
+      "description": "A collection feedbacks"
+    },
+    "Feedback": {
+      "type": "object",
+      "title": "Feedback",
+      "properties": {
+        "tags": {
+          "description": "Feedback tags",
+          "$ref": "#/definitions/Tags"
+        },
+        "replies": {
+          "description": "Feedback replies",
+          "$ref": "#/definitions/Replies"
+        },
+        "question": {
+          "type": "string",
+          "description": "Text of the feedback question"
+        },
+        "dateCreated": {
+          "type": "string",
+          "format": "ISO-8601",
+          "description": "Timestamp of feedback question"
+        },
+        "answer": {
+          "type": "string",
+          "description": "Text of feedback answer"
+        }
+      },
+      "example": {
+        "tags": [
+          "Constructive",
+          "Wellness"
+        ],
+        "replies": [
+          {
+            "message": "Thank you for your thought! This is something we should definitely improve. Are you interested to start meeting with your peers around this topic? It&#39;s true that already by sharing you feelings with others makes stress more tolerable. And one more question to you, by senior coaching do you mean more coaching for seniors or seniors to coach you?",
+            "dateCreated": "2018-01-23"
+          }
+        ],
+        "question": "What kind of support would you like to receive to help you deal with stress at work?",
+        "dateCreated": "2018-01-02T17:01:10.985007Z",
+        "answer": "More discussions about work related stress in peer-groups, also senior coaching."
+      },
+      "description": "A single feedback question"
+    },
+    "Dashboard": {
+      "type": "object",
+      "title": "Dashboard",
+      "properties": {
+        "metrics": {
+          "description": "Weekly metrics",
+          "$ref": "#/definitions/Metrics"
+        },
+        "feedback": {
+          "description": "Random feedback",
+          "$ref": "#/definitions/Feedback"
+        }
+      },
+      "description": "Dashboard displaying random feedback and metrics"
+    }
+  }
+}
