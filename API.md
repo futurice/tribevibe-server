@@ -10,6 +10,17 @@ Returns
 
 ```json
 {
+  "engagements": [
+    {
+      "name": "Tammerforce",
+      "value": 9.8
+    },
+    {
+      "name": "Inna",
+      "value": 9.4
+    },
+    ...
+  ],
   "metrics": [
     {
       "id": "engagement",
