@@ -112,7 +112,7 @@ defmodule TribevibeWeb.VibeController do
         properties do
           engagements Schema.ref(:Engagements), "Current tribe engagement levels"
           metrics Schema.ref(:Metrics), "Weekly metrics"
-          feedback Schema.ref(:Feedback), "Random feedback"
+          feedbacks Schema.ref(:Feedbacks), "One constructive and one positive feedback."
         end
       end,
       Groups: swagger_schema do

@@ -289,9 +289,9 @@
           "description": "Weekly metrics",
           "$ref": "#/definitions/Metrics"
         },
-        "feedback": {
-          "description": "Random feedback",
-          "$ref": "#/definitions/Feedback"
+        "feedbacks": {
+          "description": "One constructive and one positive feedback.",
+          "$ref": "#/definitions/Feedbacks"
         },
         "engagements": {
           "description": "Current tribe engagement levels",
