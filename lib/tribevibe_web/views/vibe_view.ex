@@ -32,7 +32,7 @@ defmodule TribevibeWeb.VibeView do
   def render("dashboard.json", %{vibe: dashboard}) do
     %{engagements: render_many(dashboard.engagements, VibeView, "engagement.json"),
       metrics: dashboard.metrics,
-      feedback: render_one(dashboard.feedback, VibeView, "feedback.json")
+      feedbacks: render_many(dashboard.feedbacks, VibeView, "feedback.json")
     }
   end
 

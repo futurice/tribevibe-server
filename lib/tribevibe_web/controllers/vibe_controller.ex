@@ -142,7 +142,10 @@ defmodule TribevibeWeb.VibeController do
     feedback = Core.fetch_random_feedback()
 
     render(conn, "dashboard.json", dashboard: %{
-      feedback: feedback,
+      feedbacks: [
+        feedback,
+        feedback
+      ],
       metrics: metrics,
       engagements: engagements})
   end
@@ -159,7 +162,10 @@ defmodule TribevibeWeb.VibeController do
     metrics = Core.fetch_metrics(group)
 
     render(conn, "dashboard.json", dashboard: %{
-      feedback: feedback,
+      feedbacks: [
+        feedback,
+        feedback
+      ],
       metrics: metrics,
       engagements: engagements})
   end
