@@ -74,12 +74,12 @@
         },
         "parameters": [
           {
-            "x-example": 3,
-            "type": "integer",
+            "x-example": "Tammerforce",
+            "type": "string",
             "required": true,
             "name": "group",
             "in": "path",
-            "description": "Group ID"
+            "description": "Group name"
           }
         ],
         "operationId": "TribevibeWeb.VibeController.dashboard_group",
