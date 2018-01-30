@@ -5,6 +5,80 @@ defmodule TribevibeWeb.VibeController do
 
   action_fallback TribevibeWeb.FallbackController
 
+  ### CONTROLLER ###
+
+  swagger_path :dashboard_all do
+    get "/api/dashboard"
+    description "Dashboard for all company values"
+    response 200, "OK", Schema.ref(:Dashboard)
+  end
+  def dashboard_all(conn, _params) do
+    engagements = Core.fetch_tribe_engagements()
+    metrics = Core.fetch_metrics()
+    feedback = Core.fetch_random_feedback()
+
+    render(conn, "dashboard.json", dashboard: %{
+      feedbacks: [
+        feedback,
+        feedback
+      ],
+      metrics: metrics,
+      engagements: engagements})
+  end
+
+  swagger_path :dashboard_group do
+    get "/api/dashboard/{group}"
+    description "Dashboard for single group"
+    parameter :group, :path, :string, "Group name", required: true, example: "Tammerforce"
+    response 200, "OK", Schema.ref(:Dashboard)
+  end
+  def dashboard_group(conn, %{"group" => group}) do
+    engagements = Core.fetch_tribe_engagements()
+    feedback = Core.fetch_random_feedback(group)
+    metrics = Core.fetch_metrics(group)
+
+    render(conn, "dashboard.json", dashboard: %{
+      feedbacks: [
+        feedback,
+        feedback
+      ],
+      metrics: metrics,
+      engagements: engagements})
+  end
+
+  swagger_path :groups do
+    get "/api/groups"
+    description "Groups"
+    response 200, "OK", Schema.ref(:Groups)
+  end
+  def groups(conn, _params) do
+    groups = Core.fetch_groups()
+
+    render(conn, "groups.json", groups: groups)
+  end
+
+  swagger_path :feedback do
+    get "/api/feedback"
+    description "Feedbacks"
+    response 200, "OK", Schema.ref(:Feedbacks)
+  end
+  def feedback(conn, _params) do
+    feedbacks = Core.fetch_feedbacks()
+
+    render(conn, "feedbacks.json", feedbacks: feedbacks)
+  end
+
+  swagger_path :engagement do
+    get "/api/engagement"
+    description "Engagement"
+    response 200, "OK", Schema.ref(:Engagements)
+  end
+  def engagement(conn, _params) do
+    engagements = Core.fetch_tribe_engagements()
+
+    render(conn, "engagements.json", engagements: engagements)
+  end
+
   def swagger_definitions do
     %{
       Reply: swagger_schema do
@@ -127,79 +201,5 @@ defmodule TribevibeWeb.VibeController do
         ]
       end
     }
-  end
-
-  ### CONTROLLER ###
-
-  swagger_path :dashboard_all do
-    get "/api/dashboard"
-    description "Dashboard for all company values"
-    response 200, "OK", Schema.ref(:Dashboard)
-  end
-  def dashboard_all(conn, _params) do
-    engagements = Core.fetch_tribe_engagements()
-    metrics = Core.fetch_metrics()
-    feedback = Core.fetch_random_feedback()
-
-    render(conn, "dashboard.json", dashboard: %{
-      feedbacks: [
-        feedback,
-        feedback
-      ],
-      metrics: metrics,
-      engagements: engagements})
-  end
-
-  swagger_path :dashboard_group do
-    get "/api/dashboard/{group}"
-    description "Dashboard for single group"
-    parameter :group, :path, :integer, "Group ID", required: true, example: 3
-    response 200, "OK", Schema.ref(:Dashboard)
-  end
-  def dashboard_group(conn, %{"group" => group}) do
-    engagements = Core.fetch_tribe_engagements()
-    feedback = Core.fetch_random_feedback(group)
-    metrics = Core.fetch_metrics(group)
-
-    render(conn, "dashboard.json", dashboard: %{
-      feedbacks: [
-        feedback,
-        feedback
-      ],
-      metrics: metrics,
-      engagements: engagements})
-  end
-
-  swagger_path :groups do
-    get "/api/groups"
-    description "Groups"
-    response 200, "OK", Schema.ref(:Groups)
-  end
-  def groups(conn, _params) do
-    groups = Core.fetch_groups()
-
-    render(conn, "groups.json", groups: groups)
-  end
-
-  swagger_path :feedback do
-    get "/api/feedback"
-    description "Feedbacks"
-    response 200, "OK", Schema.ref(:Feedbacks)
-  end
-  def feedback(conn, _params) do
-    feedbacks = Core.fetch_feedbacks
-
-    render(conn, "feedbacks.json", feedbacks: feedbacks)
-  end
-
-  swagger_path :engagement do
-    get "/api/engagement"
-    description "Engagement"
-    response 200, "OK", Schema.ref(:Engagements)
-  end
-  def engagement(conn, _params) do
-    engagements = Core.fetch_tribe_engagements()
-
-    render(conn, "engagements.json", engagements: engagements)
   end
 end

@@ -15,7 +15,7 @@ defmodule TribevibeWeb.Router do
     get "/engagement", VibeController, :engagement
   end
 
-  scope "/" do
+  scope "/api/swagger" do
     forward "/", PhoenixSwagger.Plug.SwaggerUI, otp_app: :tribevibe, swagger_file: "swagger.json", disable_validator: true
   end
 

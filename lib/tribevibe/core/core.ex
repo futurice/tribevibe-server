@@ -6,7 +6,7 @@ defmodule Tribevibe.Core do
   require Logger
   use Timex
 
-  @followed_metrics [
+  @metrics_whitelist [
     "MG-1", # Recognition
     "MG-2", # Feedback
     "MG-3", # Relationship with Colleagues
@@ -18,6 +18,9 @@ defmodule Tribevibe.Core do
     "MG-9", # Personal Growth
     "MG-10" # Ambassadorship
   ]
+
+  @max_metrics_history months: -3
+  @trial_end_date ~D[2018-01-01]
 
   @doc """
   Fetches list of groups from Officevibe API
@@ -44,7 +47,7 @@ defmodule Tribevibe.Core do
     end
   end
 
-  # Removes any groups that have '<' in their name
+  # Removes any groups that have '>' in their name
   defp filter_subgroups(groups) do
     Enum.filter(groups, fn(group) -> !String.contains?(group, ">") end)
   end
@@ -52,12 +55,17 @@ defmodule Tribevibe.Core do
   @doc """
   Fetches a random feedback from Officevibe API
   """
-  def fetch_random_feedback(_group \\ "Tammerforce") do
+  def fetch_random_feedback(groupName \\ nil) do
     url = "#{System.get_env("OFFICEVIBE_API_URL")}/v2/feedback"
     token = System.get_env("OFFICEVIBE_API_TOKEN")
     headers = ["Authorization": "Bearer #{token}"]
+    options = [
+      params: %{
+        groupName: groupName
+      }
+    ]
 
-    case HTTPoison.get(url, headers) do
+    case HTTPoison.get(url, headers, options) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         body
         |> Poison.decode!
@@ -65,10 +73,10 @@ defmodule Tribevibe.Core do
         |> Map.get("conversations")
         |> Enum.random
       {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch groups")
+        Logger.error("Failed to fetch random feedback")
         []
       {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with groups: #{inspect reason}")
+        Logger.error("API error with feedbacks: #{inspect reason}")
         reason
     end
   end
@@ -76,22 +84,27 @@ defmodule Tribevibe.Core do
   @doc """
   Fetches list of feedbacks from Officevibe API
   """
-  def fetch_feedbacks do
+  def fetch_feedbacks(groupName \\ nil) do
     url = "#{System.get_env("OFFICEVIBE_API_URL")}/v2/feedback"
     token = System.get_env("OFFICEVIBE_API_TOKEN")
     headers = ["Authorization": "Bearer #{token}"]
+    options = [
+      params: %{
+        groupName: groupName
+      }
+    ]
 
-    case HTTPoison.get(url, headers) do
+    case HTTPoison.get(url, headers, options) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         body
         |> Poison.decode!
         |> Map.get("data")
         |> Map.get("conversations")
       {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch groups")
+        Logger.error("Failed to fetch feedbacks")
         []
       {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with groups: #{inspect reason}")
+        Logger.error("API error with feedbacks: #{inspect reason}")
         reason
     end
   end
@@ -99,7 +112,7 @@ defmodule Tribevibe.Core do
   @doc """
   Fetches current tribe engagements from Officevibe API
   """
-  def fetch_tribe_engagements(groups \\ fetch_groups()) do
+  def fetch_tribe_engagements(groupNames \\ fetch_groups()) do
     url = "#{System.get_env("OFFICEVIBE_API_URL")}/v2/engagement"
     token = System.get_env("OFFICEVIBE_API_TOKEN")
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json"]
@@ -107,17 +120,17 @@ defmodule Tribevibe.Core do
       dates: [
         Timex.format!(Timex.today, "{ISOdate}")
       ],
-      groupNames: groups
+      groupNames: groupNames
     }
 
     case HTTPoison.post(url, Poison.encode!(params), headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         format_tribe_engagements(body)
       {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch groups")
+        Logger.error("Failed to fetch engagements")
         []
       {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with groups: #{inspect reason}")
+        Logger.error("API error with engagements: #{inspect reason}")
         reason
     end
   end
@@ -125,22 +138,23 @@ defmodule Tribevibe.Core do
   @doc """
   Fetches metrics from Officevibe API
   """
-  def fetch_metrics(_group \\ "Tammerforce") do
+  def fetch_metrics(groupName \\ nil) do
     url = "#{System.get_env("OFFICEVIBE_API_URL")}/v2/engagement"
     token = System.get_env("OFFICEVIBE_API_TOKEN")
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json"]
     params = %{
-      dates: generate_week_dates()
+      dates: generate_history_dates(),
+      groupNames: groupName
     }
 
     case HTTPoison.post(url, Poison.encode!(params), headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         format_metrics(body)
       {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch groups")
+        Logger.error("Failed to fetch engagements (metrics)")
         []
       {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with groups: #{inspect reason}")
+        Logger.error("API error with engagements (metrics): #{inspect reason}")
         reason
     end
   end
@@ -154,7 +168,7 @@ defmodule Tribevibe.Core do
     Enum.flat_map(reports,
       fn(%{"metricsValues" => metricsValues, "date" => date}) ->
         metricsValues
-        |> Enum.filter(fn(%{"id" => metric_id}) -> Enum.member?(@followed_metrics, metric_id) end)
+        |> Enum.filter(fn(%{"id" => metric_id}) -> Enum.member?(@metrics_whitelist, metric_id) end)
         |> Enum.map(fn(metric) -> Map.put(metric, "date", date) end)
       end)
     |> Enum.group_by(fn(%{"id" => id}) -> id end)
@@ -178,9 +192,18 @@ defmodule Tribevibe.Core do
   end
 
   # Generates array of week start dates from start until endDate, defaulting to today.
-  defp generate_week_dates(endDate \\ Timex.today) do
-    Interval.new(from: ~D[2018-01-01], until: endDate)
-      |> Interval.with_step([weeks: 1])
-      |> Enum.map(&Timex.format!(&1, "{ISOdate}"))
+  defp generate_history_dates(%Date{} = endDate \\ Timex.today) do
+    endDate
+    |> Stream.iterate(&(Timex.shift(&1, weeks: -1)))
+    |> Stream.take_while(&(isWithinMaxHistory(&1)) and isAfterTrialPeriod(&1))
+    |> Enum.map(&Timex.format!(&1, "{ISOdate}"))
+  end
+
+  defp isWithinMaxHistory(%Date{} = date) do
+    Timex.after?(date, Timex.shift(Timex.today, @max_metrics_history))
+  end
+
+  defp isAfterTrialPeriod(%Date{} = date) do
+    Timex.after?(date, @trial_end_date)
   end
 end
