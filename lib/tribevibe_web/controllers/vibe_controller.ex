@@ -157,7 +157,7 @@ defmodule TribevibeWeb.VibeController do
     response 200, "OK", Schema.ref(:Dashboard)
   end
   def dashboard_group(conn, %{"group" => group}) do
-    engagements = Core.fetch_tribe_engagements([group])
+    engagements = Core.fetch_tribe_engagements()
     feedback = Core.fetch_random_feedback(group)
     metrics = Core.fetch_metrics(group)
 
