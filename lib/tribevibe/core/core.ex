@@ -4,6 +4,20 @@ defmodule Tribevibe.Core do
   """
 
   require Logger
+  use Timex
+
+  @followed_metrics [
+    "MG-1", # Recognition
+    "MG-2", # Feedback
+    "MG-3", # Relationship with Colleagues
+    "MG-4", # Relationship with Managers
+    "MG-5", # Satisfaction
+    "MG-6", # Alignement
+    "MG-7", # Happiness
+    "MG-8", # Wellness
+    "MG-9", # Personal Growth
+    "MG-10" # Ambassadorship
+  ]
 
   @doc """
   Fetches list of groups from Officevibe API
@@ -20,6 +34,7 @@ defmodule Tribevibe.Core do
         |> Map.get("data")
         |> Map.get("groups")
         |> Enum.map(fn(group) -> Map.get(group, "name") end)
+        |> filter_subgroups
       {:ok, %HTTPoison.Response{status_code: 404}} ->
         Logger.error("Failed to fetch groups")
         []
@@ -27,6 +42,11 @@ defmodule Tribevibe.Core do
         Logger.error("API error with groups: #{inspect reason}")
         reason
     end
+  end
+
+  # Removes any groups that have '<' in their name
+  defp filter_subgroups(groups) do
+    Enum.filter(groups, fn(group) -> !String.contains?(group, ">") end)
   end
 
   @doc """
@@ -85,7 +105,7 @@ defmodule Tribevibe.Core do
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json"]
     params = %{
       dates: [
-        "2018-01-24"
+        Timex.format!(Timex.today, "{ISOdate}")
       ],
       groupNames: groups
     }
@@ -110,13 +130,7 @@ defmodule Tribevibe.Core do
     token = System.get_env("OFFICEVIBE_API_TOKEN")
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json"]
     params = %{
-      dates: [
-        "2018-01-01",
-        "2018-01-08",
-        "2018-01-15",
-        "2018-01-22",
-        "2018-01-24",
-      ]
+      dates: generate_week_dates()
     }
 
     case HTTPoison.post(url, Poison.encode!(params), headers) do
@@ -139,7 +153,9 @@ defmodule Tribevibe.Core do
 
     Enum.flat_map(reports,
       fn(%{"metricsValues" => metricsValues, "date" => date}) ->
-        Enum.map(metricsValues, fn(metric) -> Map.put(metric, "date", date) end)
+        metricsValues
+        |> Enum.filter(fn(%{"id" => metric_id}) -> Enum.member?(@followed_metrics, metric_id) end)
+        |> Enum.map(fn(metric) -> Map.put(metric, "date", date) end)
       end)
     |> Enum.group_by(fn(%{"id" => id}) -> id end)
     |> Map.values
@@ -159,5 +175,12 @@ defmodule Tribevibe.Core do
       %{name: groupName,
         value: Map.get(Enum.find(metricsValues, fn(%{"id" => id} = _metric) -> id === "Engagement" end), "value", 0)}
     end)
+  end
+
+  # Generates array of week start dates from start until endDate, defaulting to today.
+  defp generate_week_dates(endDate \\ Timex.today) do
+    Interval.new(from: ~D[2018-01-01], until: endDate)
+      |> Interval.with_step([weeks: 1])
+      |> Enum.map(&Timex.format!(&1, "{ISOdate}"))
   end
 end

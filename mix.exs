@@ -36,11 +36,12 @@ defmodule Tribevibe.Mixfile do
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
-      {:gettext, "~> 0.11"},
+      {:gettext, "0.13.1"},
       {:cowboy, "~> 1.0"},
       {:phoenix_swagger, "~> 0.7.0"},
       {:corsica, "~> 1.0"},
-      {:httpoison, "~> 1.0"}
+      {:httpoison, "~> 1.0"},
+      {:timex, "~> 3.1"}
     ]
   end
 end
