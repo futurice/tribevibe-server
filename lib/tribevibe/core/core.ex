@@ -79,11 +79,13 @@ defmodule Tribevibe.Core do
         positive = feedbacks
         |> filter_feedbacks_by_tag("Positive")
         |> filter_short_feedbacks
+        |> filter_public_feedbacks
         |> Enum.take(10)
 
         constructive = feedbacks
         |> filter_feedbacks_by_tag("Constructive")
         |> filter_unreplied_feedbacks
+        |> filter_public_feedbacks
         |> Enum.take(10)
 
         %{positive: positive, constructive: constructive}
@@ -108,6 +110,22 @@ defmodule Tribevibe.Core do
     Enum.filter(feedbacks, fn(%{"message" => message}) -> String.length(message) >= min_characters end)
   end
 
+  def filter_public_feedbacks(feedbacks) do
+    Enum.filter(feedbacks, fn(%{"replies" => replies, "userEmail" => originalEmail} = feedback) ->
+      is_public?(feedback) || Enum.any?(replies, fn(reply) ->
+        is_public?(reply) && is_original_poster?(reply, originalEmail)
+      end)
+    end)
+  end
+
+  # Public feedbacks should contain string '#public' by original poster in message body
+  defp is_public?(%{"message" => message}), do: String.contains?(message, "#public")
+
+  # Makes sure that the poster either has the same email as original poster,
+  # or original poster was an anonymous user. Only employees can post anonymously.
+  defp is_original_poster?(%{"userEmail" => replyEmail}, "") when is_nil(replyEmail), do: true
+  defp is_original_poster?(%{"userEmail" => replyEmail}, originalEmail), do: replyEmail == originalEmail
+
   @doc """
   Fetches current tribe engagements from Officevibe API
   """
@@ -124,7 +142,14 @@ defmodule Tribevibe.Core do
 
     case HTTPoison.post(url, Poison.encode!(params), headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        format_tribe_engagements(body)
+        body
+        |> Poison.decode!
+        |> Map.get("data")
+        |> Map.get("weeklyReports")
+        |> Enum.map(fn(%{"metricsValues" => metricsValues, "groupName" => groupName}) ->
+          %{name: groupName,
+            value: Map.get(Enum.find(metricsValues, fn(%{"id" => id} = _metric) -> id === "Engagement" end), "value", 0)}
+        end)
       {:ok, %HTTPoison.Response{status_code: 404}} ->
         Logger.error("Failed to fetch engagements")
         []
@@ -182,30 +207,19 @@ defmodule Tribevibe.Core do
     end)
   end
 
-  defp format_tribe_engagements(body) do
-    body
-    |> Poison.decode!
-    |> Map.get("data")
-    |> Map.get("weeklyReports")
-    |> Enum.map(fn(%{"metricsValues" => metricsValues, "groupName" => groupName}) ->
-      %{name: groupName,
-        value: Map.get(Enum.find(metricsValues, fn(%{"id" => id} = _metric) -> id === "Engagement" end), "value", 0)}
-    end)
-  end
-
   # Generates array of week start dates from start until endDate, defaulting to today.
   defp generate_history_dates(%Date{} = endDate \\ Timex.today) do
     endDate
     |> Stream.iterate(&(Timex.shift(&1, weeks: -1)))
-    |> Stream.take_while(&(isWithinMaxHistory(&1)) and isAfterTrialPeriod(&1))
+    |> Stream.take_while(&(is_within_max_history?(&1)) and is_after_trial_period?(&1))
     |> Enum.map(&Timex.format!(&1, "{ISOdate}"))
   end
 
-  defp isWithinMaxHistory(%Date{} = date) do
+  defp is_within_max_history?(%Date{} = date) do
     Timex.after?(date, Timex.shift(Timex.today, @max_metrics_history))
   end
 
-  defp isAfterTrialPeriod(%Date{} = date) do
+  defp is_after_trial_period?(%Date{} = date) do
     Timex.after?(date, @trial_end_date)
   end
 end
