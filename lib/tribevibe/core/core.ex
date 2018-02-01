@@ -79,13 +79,13 @@ defmodule Tribevibe.Core do
         positive = feedbacks
         |> filter_feedbacks_by_tag("Positive")
         |> filter_short_feedbacks
-        |> filter_public_feedbacks
+        #|> filter_public_feedbacks
         |> Enum.take(10)
 
         constructive = feedbacks
         |> filter_feedbacks_by_tag("Constructive")
         |> filter_unreplied_feedbacks
-        |> filter_public_feedbacks
+        #|> filter_public_feedbacks
         |> Enum.take(10)
 
         %{positive: positive, constructive: constructive}
