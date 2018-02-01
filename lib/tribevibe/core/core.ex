@@ -176,7 +176,7 @@ defmodule Tribevibe.Core do
     |> Enum.map(fn([head | _] = weeklyMetrics) ->
       %{id: head["id"],
         name: head["displayName"],
-        values: Enum.reduce(weeklyMetrics, [], fn(%{"value" => value}, acc) -> [value | acc] end)}
+        values: Enum.map(weeklyMetrics, fn(metric) -> Map.take(metric, ["value", "date"]) end)}
     end)
   end
 
