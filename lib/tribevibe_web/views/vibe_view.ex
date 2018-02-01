@@ -33,7 +33,10 @@ defmodule TribevibeWeb.VibeView do
     %{engagements: render_many(dashboard.engagements, VibeView, "engagement.json"),
       engagement: dashboard.engagement,
       metrics: dashboard.metrics,
-      feedbacks: render_many(dashboard.feedbacks, VibeView, "feedback.json")
+      feedbacks: %{
+        positive: render_many(dashboard.feedbacks.positive, VibeView, "feedback.json"),
+        constructive: render_many(dashboard.feedbacks.constructive, VibeView, "feedback.json")
+      }
     }
   end
 

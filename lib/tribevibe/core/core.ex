@@ -54,10 +54,10 @@ defmodule Tribevibe.Core do
 
   @doc """
   Fetches newest feedbacks from Officevibe API that match criteria
-  - Konstruktiiviset, joihin on vastattu
-  - Positiiviset sellaisenaan (min. 20 kirjainta)
-  - Näistä 10 uusinta
-  - ainiin, ja sitten pitäisi olla #public jossain tekstibodyssä
+  - Constructive feedbacks which have been answered
+  - Positive feedbacks by default (min. 20 characters)
+  - 10 newest feedbacks of both categories
+  - Must contain string '#public' somewhere in the original posters text body
   """
   def fetch_newest_feedbacks(groupName \\ nil) do
     url = "#{System.get_env("OFFICEVIBE_API_URL")}/v2/feedback"
@@ -71,17 +71,41 @@ defmodule Tribevibe.Core do
 
     case HTTPoison.get(url, headers, options) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        body
+        feedbacks = body
         |> Poison.decode!
         |> Map.get("data")
         |> Map.get("conversations")
+
+        positive = feedbacks
+        |> filter_feedbacks_by_tag("Positive")
+        |> filter_short_feedbacks
+        |> Enum.take(10)
+
+        constructive = feedbacks
+        |> filter_feedbacks_by_tag("Constructive")
+        |> filter_unreplied_feedbacks
+        |> Enum.take(10)
+
+        %{positive: positive, constructive: constructive}
       {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch random feedback")
-        []
+        Logger.error("Failed to fetch feedbacks")
+        %{positive: [], constructive: []}
       {:error, %HTTPoison.Error{reason: reason}} ->
         Logger.error("API error with feedbacks: #{inspect reason}")
         reason
     end
+  end
+
+  defp filter_feedbacks_by_tag(feedbacks, tag) do
+    Enum.filter(feedbacks, fn(%{"tags" => tags}) -> Enum.member?(tags, tag) end)
+  end
+
+  defp filter_unreplied_feedbacks(feedbacks) do
+    Enum.filter(feedbacks, fn(%{"replies" => replies}) -> !Enum.empty?(replies) end)
+  end
+
+  defp filter_short_feedbacks(feedbacks, min_characters \\ 20) do
+    Enum.filter(feedbacks, fn(%{"message" => message}) -> String.length(message) >= min_characters end)
   end
 
   @doc """
