@@ -56,7 +56,7 @@ defmodule TribevibeWeb.VibeController do
   swagger_path :feedback do
     get "/api/feedback"
     description "Newest feedbacks"
-    response 200, "OK", Schema.ref(:Feedbacks)
+    response 200, "OK", Schema.ref(:FeedbackBlock)
   end
   def feedback(conn, _params) do
     feedbacks = Core.fetch_newest_feedbacks()
@@ -179,7 +179,7 @@ defmodule TribevibeWeb.VibeController do
           replies: [
             %{
               dateCreated: "2018-01-23",
-              message: "Thank you for your thought! This is something we should definitely improve. Are you interested to start meeting with your peers around this topic? It&#39;s true that already by sharing you feelings with others makes stress more tolerable. And one more question to you, by senior coaching do you mean more coaching for seniors or seniors to coach you?"
+              message: "Thank you for your thought! This is something we should definitely improve."
             }
           ]
         }
@@ -190,6 +190,14 @@ defmodule TribevibeWeb.VibeController do
         type :array
         items Schema.ref(:Feedback)
       end,
+      FeedbackBlock: swagger_schema do
+        title "FeedbackBlock"
+        description "Block containting positive and constructive feedback"
+        properties do
+          positive Schema.ref(:Feedbacks), "Newest positive #public feedbacks."
+          constructive Schema.ref(:Feedbacks), "Newest constructive #public feedbacks."
+        end
+      end,
       Dashboard: swagger_schema do
         title "Dashboard"
         description "Dashboard displaying random feedback and metrics"
@@ -197,7 +205,7 @@ defmodule TribevibeWeb.VibeController do
           engagements Schema.ref(:Engagements), "Current tribe engagement levels"
           engagement Schema.ref(:Metric), "Weekly engagement levels for selected tribe or all company"
           metrics Schema.ref(:Metrics), "Weekly metrics"
-          feedbacks Schema.ref(:Feedbacks), "Newest #public feedbacks."
+          feedbacks Schema.ref(:FeedbackBlock), "Newest feedbacks."
         end
       end,
       Groups: swagger_schema do

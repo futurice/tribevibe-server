@@ -29,7 +29,7 @@
         "responses": {
           "200": {
             "schema": {
-              "$ref": "#/definitions/Feedbacks"
+              "$ref": "#/definitions/FeedbackBlock"
             },
             "description": "OK"
           }
@@ -237,6 +237,21 @@
       },
       "description": "A collection feedbacks"
     },
+    "FeedbackBlock": {
+      "type": "object",
+      "title": "FeedbackBlock",
+      "properties": {
+        "positive": {
+          "description": "Newest positive #public feedbacks.",
+          "$ref": "#/definitions/Feedbacks"
+        },
+        "constructive": {
+          "description": "Newest constructive #public feedbacks.",
+          "$ref": "#/definitions/Feedbacks"
+        }
+      },
+      "description": "Block containting positive and constructive feedback"
+    },
     "Feedback": {
       "type": "object",
       "title": "Feedback",
@@ -270,7 +285,7 @@
         ],
         "replies": [
           {
-            "message": "Thank you for your thought! This is something we should definitely improve. Are you interested to start meeting with your peers around this topic? It&#39;s true that already by sharing you feelings with others makes stress more tolerable. And one more question to you, by senior coaching do you mean more coaching for seniors or seniors to coach you?",
+            "message": "Thank you for your thought! This is something we should definitely improve.",
             "dateCreated": "2018-01-23"
           }
         ],
@@ -316,8 +331,8 @@
           "$ref": "#/definitions/Metrics"
         },
         "feedbacks": {
-          "description": "Newest #public feedbacks.",
-          "$ref": "#/definitions/Feedbacks"
+          "description": "Newest feedbacks.",
+          "$ref": "#/definitions/FeedbackBlock"
         },
         "engagements": {
           "description": "Current tribe engagement levels",
