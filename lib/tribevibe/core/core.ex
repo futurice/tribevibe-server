@@ -53,9 +53,13 @@ defmodule Tribevibe.Core do
   end
 
   @doc """
-  Fetches a random feedback from Officevibe API
+  Fetches newest feedbacks from Officevibe API that match criteria
+  - Konstruktiiviset, joihin on vastattu
+  - Positiiviset sellaisenaan (min. 20 kirjainta)
+  - Näistä 10 uusinta
+  - ainiin, ja sitten pitäisi olla #public jossain tekstibodyssä
   """
-  def fetch_random_feedback(groupName \\ nil) do
+  def fetch_newest_feedbacks(groupName \\ nil) do
     url = "#{System.get_env("OFFICEVIBE_API_URL")}/v2/feedback"
     token = System.get_env("OFFICEVIBE_API_TOKEN")
     headers = ["Authorization": "Bearer #{token}"]
@@ -71,37 +75,8 @@ defmodule Tribevibe.Core do
         |> Poison.decode!
         |> Map.get("data")
         |> Map.get("conversations")
-        |> Enum.random
       {:ok, %HTTPoison.Response{status_code: 404}} ->
         Logger.error("Failed to fetch random feedback")
-        []
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with feedbacks: #{inspect reason}")
-        reason
-    end
-  end
-
-  @doc """
-  Fetches list of feedbacks from Officevibe API
-  """
-  def fetch_feedbacks(groupName \\ nil) do
-    url = "#{System.get_env("OFFICEVIBE_API_URL")}/v2/feedback"
-    token = System.get_env("OFFICEVIBE_API_TOKEN")
-    headers = ["Authorization": "Bearer #{token}"]
-    options = [
-      params: %{
-        groupName: groupName
-      }
-    ]
-
-    case HTTPoison.get(url, headers, options) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        body
-        |> Poison.decode!
-        |> Map.get("data")
-        |> Map.get("conversations")
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch feedbacks")
         []
       {:error, %HTTPoison.Error{reason: reason}} ->
         Logger.error("API error with feedbacks: #{inspect reason}")
@@ -149,7 +124,10 @@ defmodule Tribevibe.Core do
 
     case HTTPoison.post(url, Poison.encode!(params), headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        format_metrics(body)
+        metrics = pick_whitelisted_metrics(body, @metrics_whitelist)
+        engagement = pick_whitelisted_metrics(body, ["Engagement"]) |> List.first
+
+        %{metrics: metrics, engagement: engagement}
       {:ok, %HTTPoison.Response{status_code: 404}} ->
         Logger.error("Failed to fetch engagements (metrics)")
         []
@@ -159,7 +137,7 @@ defmodule Tribevibe.Core do
     end
   end
 
-  defp format_metrics(body) do
+  defp pick_whitelisted_metrics(body, whitelist) do
     reports = body
     |> Poison.decode!
     |> Map.get("data")
@@ -168,7 +146,7 @@ defmodule Tribevibe.Core do
     Enum.flat_map(reports,
       fn(%{"metricsValues" => metricsValues, "date" => date}) ->
         metricsValues
-        |> Enum.filter(fn(%{"id" => metric_id}) -> Enum.member?(@metrics_whitelist, metric_id) end)
+        |> Enum.filter(fn(%{"id" => metric_id}) -> Enum.member?(whitelist, metric_id) end)
         |> Enum.map(fn(metric) -> Map.put(metric, "date", date) end)
       end)
     |> Enum.group_by(fn(%{"id" => id}) -> id end)

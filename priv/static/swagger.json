@@ -36,7 +36,7 @@
         },
         "parameters": [],
         "operationId": "TribevibeWeb.VibeController.feedback",
-        "description": "Feedbacks"
+        "description": "Newest feedbacks"
       }
     },
     "/api/engagement": {
@@ -116,9 +116,28 @@
       "type": "array",
       "title": "Values",
       "items": {
-        "type": "number"
+        "$ref": "#/definitions/Value"
       },
       "description": "A collection metric values"
+    },
+    "Value": {
+      "type": "object",
+      "title": "Value",
+      "properties": {
+        "value": {
+          "type": "number",
+          "description": "Tribe engagement amount, 0.0 - 10.0"
+        },
+        "date": {
+          "type": "string",
+          "description": "Date string, YYYY-MM-DD"
+        }
+      },
+      "example": {
+        "value": 9.8,
+        "date": "2018-01-01"
+      },
+      "description": "A single metric value"
     },
     "Tags": {
       "type": "array",
@@ -179,11 +198,18 @@
       },
       "example": {
         "values": [
-          7.2,
-          7.2,
-          7.2,
-          7.1,
-          7.3
+          {
+            "value": 7.2,
+            "date": "2018-01-01"
+          },
+          {
+            "value": 7.2,
+            "date": "2018-01-08"
+          },
+          {
+            "value": 7.2,
+            "date": "2018-01-15"
+          }
         ],
         "name": "Happiness",
         "id": "MG-7"
@@ -290,12 +316,16 @@
           "$ref": "#/definitions/Metrics"
         },
         "feedbacks": {
-          "description": "One constructive and one positive feedback.",
+          "description": "Newest #public feedbacks.",
           "$ref": "#/definitions/Feedbacks"
         },
         "engagements": {
           "description": "Current tribe engagement levels",
           "$ref": "#/definitions/Engagements"
+        },
+        "engagement": {
+          "description": "Weekly engagement levels for selected tribe or all company",
+          "$ref": "#/definitions/Metric"
         }
       },
       "description": "Dashboard displaying random feedback and metrics"

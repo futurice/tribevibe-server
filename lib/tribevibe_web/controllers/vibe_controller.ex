@@ -14,15 +14,13 @@ defmodule TribevibeWeb.VibeController do
   end
   def dashboard_all(conn, _params) do
     engagements = Core.fetch_tribe_engagements()
-    metrics = Core.fetch_metrics()
-    feedback = Core.fetch_random_feedback()
+    %{metrics: metrics, engagement: engagement} = Core.fetch_metrics()
+    feedbacks = Core.fetch_newest_feedbacks()
 
     render(conn, "dashboard.json", dashboard: %{
-      feedbacks: [
-        feedback,
-        feedback
-      ],
+      feedbacks: feedbacks,
       metrics: metrics,
+      engagement: engagement,
       engagements: engagements})
   end
 
@@ -34,15 +32,13 @@ defmodule TribevibeWeb.VibeController do
   end
   def dashboard_group(conn, %{"group" => group}) do
     engagements = Core.fetch_tribe_engagements()
-    feedback = Core.fetch_random_feedback(group)
-    metrics = Core.fetch_metrics(group)
+    feedbacks = Core.fetch_newest_feedbacks(group)
+    %{metrics: metrics, engagement: engagement} = Core.fetch_metrics(group)
 
     render(conn, "dashboard.json", dashboard: %{
-      feedbacks: [
-        feedback,
-        feedback
-      ],
+      feedbacks: feedbacks,
       metrics: metrics,
+      engagement: engagement,
       engagements: engagements})
   end
 
@@ -59,11 +55,11 @@ defmodule TribevibeWeb.VibeController do
 
   swagger_path :feedback do
     get "/api/feedback"
-    description "Feedbacks"
+    description "Newest feedbacks"
     response 200, "OK", Schema.ref(:Feedbacks)
   end
   def feedback(conn, _params) do
-    feedbacks = Core.fetch_feedbacks()
+    feedbacks = Core.fetch_newest_feedbacks()
 
     render(conn, "feedbacks.json", feedbacks: feedbacks)
   end
@@ -107,8 +103,18 @@ defmodule TribevibeWeb.VibeController do
         title "Values"
         description "A collection metric values"
         type :array
-        items %{
-          type: :number
+        items Schema.ref(:Value)
+      end,
+      Value: swagger_schema do
+        title "Value"
+        description "A single metric value"
+        properties do
+          value :number, "Tribe engagement amount, 0.0 - 10.0"
+          date :string, "Date string, YYYY-MM-DD"
+        end
+        example %{
+          value: 9.8,
+          date: "2018-01-01"
         }
       end,
       Engagement: swagger_schema do
@@ -138,7 +144,11 @@ defmodule TribevibeWeb.VibeController do
           values Schema.ref(:Values), "Weekly metric values"
         end
         example %{
-          values: [ 7.2, 7.2, 7.2, 7.1, 7.3 ],
+          values: [
+            %{value: 7.2, date: "2018-01-01"},
+            %{value: 7.2, date: "2018-01-08"},
+            %{value: 7.2, date: "2018-01-15"}
+          ],
           name: "Happiness",
           id: "MG-7"
         }
@@ -185,8 +195,9 @@ defmodule TribevibeWeb.VibeController do
         description "Dashboard displaying random feedback and metrics"
         properties do
           engagements Schema.ref(:Engagements), "Current tribe engagement levels"
+          engagement Schema.ref(:Metric), "Weekly engagement levels for selected tribe or all company"
           metrics Schema.ref(:Metrics), "Weekly metrics"
-          feedbacks Schema.ref(:Feedbacks), "One constructive and one positive feedback."
+          feedbacks Schema.ref(:Feedbacks), "Newest #public feedbacks."
         end
       end,
       Groups: swagger_schema do
