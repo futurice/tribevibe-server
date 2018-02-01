@@ -80,12 +80,14 @@ defmodule Tribevibe.Core do
         |> filter_feedbacks_by_tag("Positive")
         |> filter_short_feedbacks
         #|> filter_public_feedbacks
+        |> sort_by_newest
         |> Enum.take(10)
 
         constructive = feedbacks
         |> filter_feedbacks_by_tag("Constructive")
         |> filter_unreplied_feedbacks
         #|> filter_public_feedbacks
+        |> sort_by_newest
         |> Enum.take(10)
 
         %{positive: positive, constructive: constructive}
@@ -110,12 +112,16 @@ defmodule Tribevibe.Core do
     Enum.filter(feedbacks, fn(%{"message" => message}) -> String.length(message) >= min_characters end)
   end
 
-  def filter_public_feedbacks(feedbacks) do
+  defp filter_public_feedbacks(feedbacks) do
     Enum.filter(feedbacks, fn(%{"replies" => replies, "userEmail" => originalEmail} = feedback) ->
       is_public?(feedback) || Enum.any?(replies, fn(reply) ->
         is_public?(reply) && is_original_poster?(reply, originalEmail)
       end)
     end)
+  end
+
+  defp sort_by_newest(feedbacks) do
+    Enum.sort_by(feedbacks, &(Map.get(&1, "creationDate")), &>=/2)
   end
 
   # Public feedbacks should contain string '#public' by original poster in message body
