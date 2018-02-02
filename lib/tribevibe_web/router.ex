@@ -12,6 +12,7 @@ defmodule TribevibeWeb.Router do
     get "/dashboard/:group", VibeController, :dashboard_group
     get "/groups", VibeController, :groups
     get "/feedback", VibeController, :feedback
+    get "/feedback/:group", VibeController, :feedback_group
     get "/engagement", VibeController, :engagement
   end
 

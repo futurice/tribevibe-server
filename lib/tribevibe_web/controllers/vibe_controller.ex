@@ -64,6 +64,18 @@ defmodule TribevibeWeb.VibeController do
     render(conn, "feedbacks.json", feedbacks: feedbacks)
   end
 
+  swagger_path :feedback_group do
+    get "/api/feedback/{group}"
+    description "Newest feedbacks for given group"
+    parameter :group, :path, :string, "Group name", required: true, example: "Tammerforce"
+    response 200, "OK", Schema.ref(:FeedbackBlock)
+  end
+  def feedback_group(conn, %{"group" => group}) do
+    feedbacks = Core.fetch_newest_feedbacks(group)
+
+    render(conn, "feedbacks.json", feedbacks: feedbacks)
+  end
+
   swagger_path :engagement do
     get "/api/engagement"
     description "Engagement"

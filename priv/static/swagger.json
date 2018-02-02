@@ -20,6 +20,34 @@
         "description": "Groups"
       }
     },
+    "/api/feedback/{group}": {
+      "get": {
+        "tags": [
+          "Vibe"
+        ],
+        "summary": "",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/FeedbackBlock"
+            },
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "x-example": "Tammerforce",
+            "type": "string",
+            "required": true,
+            "name": "group",
+            "in": "path",
+            "description": "Group name"
+          }
+        ],
+        "operationId": "TribevibeWeb.VibeController.feedback_group",
+        "description": "Newest feedbacks for given group"
+      }
+    },
     "/api/feedback": {
       "get": {
         "tags": [

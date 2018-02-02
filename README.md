@@ -1,4 +1,4 @@
-# Tribevibe
+# Tribevibe Server
 
 ## Quickstart
 
@@ -47,14 +47,33 @@ Next start a new IEx session with
 
 ```
 iex -S mix phx.server
-````
+```
 
 Execution should stop at `IEx.pry`, and you can restart it with `respawn`.
 
-
 ## Deployment
 
+This project is deployed as Docker image to [futuswarm](https://futuswarm.play.futurice.com/). After the initial setup make sure you have access to deploy `tribevibe-server`.
+
+Begin by building the latest image.
+
 ```
-git push heroku master
+docker build -t futurice/tribevibe-server:$(git rev-parse --short HEAD) .
 ```
 
+Next push the image to swarm, and deploy it to production.
+
+```
+playswarm image:push -i futurice/tribevibe-server -t $(git rev-parse --short HEAD)
+playswarm app:deploy -i futurice/tribevibe-server -t $(git rev-parse --short HEAD) -n tribevibe-server
+```
+
+If connection to Officevibe API does not work, make sure that env variables are correctly set using `playswarm config:set`.
+
+## Maintenance
+
+You can view application logs with
+
+```
+playswarm app:logs -n tribevibe-server
+```
