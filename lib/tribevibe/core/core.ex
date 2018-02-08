@@ -80,6 +80,7 @@ defmodule Tribevibe.Core do
         |> filter_feedbacks_by_tag("Positive")
         |> filter_short_feedbacks
         |> filter_public_feedbacks
+        |> mark_original_posters
         |> sort_by_newest
         |> Enum.take(10)
 
@@ -87,6 +88,7 @@ defmodule Tribevibe.Core do
         |> filter_feedbacks_by_tag("Constructive")
         |> filter_unreplied_feedbacks
         |> filter_public_feedbacks
+        |> mark_original_posters
         |> sort_by_newest
         |> Enum.take(10)
 
@@ -122,6 +124,14 @@ defmodule Tribevibe.Core do
 
   defp sort_by_newest(feedbacks) do
     Enum.sort_by(feedbacks, &(Map.get(&1, "creationDate")), &>=/2)
+  end
+
+  defp mark_original_posters(feedbacks) do
+    Enum.map(feedbacks, fn(%{"replies" => replies, "userEmail" => originalEmail} = feedback) ->
+      Map.put(feedback, "replies", Enum.map(replies, fn(reply) ->
+        Map.put(reply, "isOriginalPoster", is_original_poster?(reply, originalEmail))
+      end))
+    end)
   end
 
   # Public feedbacks should contain string '#public' by original poster in message body

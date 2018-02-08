@@ -183,6 +183,10 @@
           "type": "string",
           "description": "Reply message"
         },
+        "isOriginalPoster": {
+          "type": "boolean",
+          "description": "Is the message by the original poster or someone else?"
+        },
         "dateCreated": {
           "type": "string",
           "format": "ISO-8601",
@@ -314,6 +318,7 @@
         "replies": [
           {
             "message": "Thank you for your thought! This is something we should definitely improve.",
+            "isOriginalPoster": false,
             "dateCreated": "2018-01-23"
           }
         ],

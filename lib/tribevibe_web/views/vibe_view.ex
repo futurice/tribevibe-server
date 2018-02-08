@@ -29,7 +29,8 @@ defmodule TribevibeWeb.VibeView do
 
   def render("reply.json", %{vibe: reply}) do
     %{dateCreated: reply["creationDate"],
-      message: reply["message"]}
+      message: reply["message"],
+      isOriginalPoster: reply["isOriginalPoster"]}
   end
 
   def render("dashboard.json", %{vibe: dashboard}) do

@@ -55,10 +55,12 @@ Execution should stop at `IEx.pry`, and you can restart it with `respawn`.
 
 This project is deployed as Docker image to [futuswarm](https://futuswarm.play.futurice.com/). After the initial setup make sure you have access to deploy `tribevibe-server`.
 
+Set `SECRET_KEY_BASE` env variable to some generated secret value. You can generate new secrets with `mix phx.gen.secret`.
+
 Begin by building the latest image.
 
 ```
-docker build -t futurice/tribevibe-server:$(git rev-parse --short HEAD) .
+docker build -t futurice/tribevibe-server:$(git rev-parse --short HEAD) --build-arg secret_key_base=$SECRET_KEY_BASE .
 ```
 
 Next push the image to swarm, and deploy it to production.

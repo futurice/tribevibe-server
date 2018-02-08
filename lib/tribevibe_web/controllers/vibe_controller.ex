@@ -95,6 +95,7 @@ defmodule TribevibeWeb.VibeController do
         properties do
           dateCreated :string, "Timestamp of reply", format: "ISO-8601"
           message :string, "Reply message"
+          isOriginalPoster :boolean, "Is the message by the original poster or someone else?"
         end
       end,
       Replies: swagger_schema do
@@ -191,7 +192,8 @@ defmodule TribevibeWeb.VibeController do
           replies: [
             %{
               dateCreated: "2018-01-23",
-              message: "Thank you for your thought! This is something we should definitely improve."
+              message: "Thank you for your thought! This is something we should definitely improve.",
+              isOriginalPoster: false
             }
           ]
         }
