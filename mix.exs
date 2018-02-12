@@ -19,7 +19,7 @@ defmodule Tribevibe.Mixfile do
   def application do
     [
       mod: {Tribevibe.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :cachex]
     ]
   end
 
@@ -41,7 +41,8 @@ defmodule Tribevibe.Mixfile do
       {:phoenix_swagger, "~> 0.7.0"},
       {:corsica, "~> 1.0"},
       {:httpoison, "~> 1.0"},
-      {:timex, "~> 3.1"}
+      {:timex, "~> 3.1"},
+      {:cachex, "~> 2.1"}
     ]
   end
 end

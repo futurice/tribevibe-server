@@ -30,21 +30,28 @@ defmodule Tribevibe.Core do
     token = System.get_env("OFFICEVIBE_API_TOKEN")
     headers = ["Authorization": "Bearer #{token}"]
 
-    case HTTPoison.get(url, headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        body
-        |> Poison.decode!
-        |> Map.get("data")
-        |> Map.get("groups")
-        |> Enum.map(fn(group) -> Map.get(group, "name") end)
-        |> filter_subgroups
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch groups")
-        []
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with groups: #{inspect reason}")
-        reason
-    end
+    cache_key = url
+
+    Cachex.get!(:officevibe_cache, cache_key, fallback: fn(_request_url) ->
+      # Fallback to fetch data from OfficeVibe API
+      case HTTPoison.get(url, headers) do
+        {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+          response = body
+          |> Poison.decode!
+          |> Map.get("data")
+          |> Map.get("groups")
+          |> Enum.map(fn(group) -> Map.get(group, "name") end)
+          |> filter_subgroups
+
+          { :commit, response }
+        {:ok, %HTTPoison.Response{status_code: 404}} ->
+          Logger.error("Failed to fetch groups")
+          { :ignore, [] }
+        {:error, %HTTPoison.Error{reason: reason}} ->
+          Logger.error("API error with groups: #{inspect reason}")
+          { :ignore, reason }
+      end
+    end)
   end
 
   # Removes any groups that have '>' in their name
@@ -69,37 +76,41 @@ defmodule Tribevibe.Core do
       }
     ]
 
-    case HTTPoison.get(url, headers, options) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        feedbacks = body
-        |> Poison.decode!
-        |> Map.get("data")
-        |> Map.get("conversations")
+    cache_key = url <> "#" <> inspect options
 
-        positive = feedbacks
-        |> filter_feedbacks_by_tag("Positive")
-        |> filter_short_feedbacks
-        |> filter_public_feedbacks
-        |> mark_original_posters
-        |> sort_by_newest
-        |> Enum.take(10)
+    Cachex.get!(:officevibe_cache, cache_key, fallback: fn(_request_url) ->
+      case HTTPoison.get(url, headers, options) do
+        {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+          feedbacks = body
+          |> Poison.decode!
+          |> Map.get("data")
+          |> Map.get("conversations")
 
-        constructive = feedbacks
-        |> filter_feedbacks_by_tag("Constructive")
-        |> filter_unreplied_feedbacks
-        |> filter_public_feedbacks
-        |> mark_original_posters
-        |> sort_by_newest
-        |> Enum.take(10)
+          positive = feedbacks
+          |> filter_feedbacks_by_tag("Positive")
+          |> filter_short_feedbacks
+          |> filter_public_feedbacks
+          |> mark_original_posters
+          |> sort_by_newest
+          |> Enum.take(10)
 
-        %{positive: positive, constructive: constructive}
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch feedbacks")
-        %{positive: [], constructive: []}
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with feedbacks: #{inspect reason}")
-        reason
-    end
+          constructive = feedbacks
+          |> filter_feedbacks_by_tag("Constructive")
+          |> filter_unreplied_feedbacks
+          |> filter_public_feedbacks
+          |> mark_original_posters
+          |> sort_by_newest
+          |> Enum.take(10)
+
+          { :commit, %{positive: positive, constructive: constructive} }
+        {:ok, %HTTPoison.Response{status_code: 404}} ->
+          Logger.error("Failed to fetch feedbacks")
+          { :ignore, %{positive: [], constructive: []} }
+        {:error, %HTTPoison.Error{reason: reason}} ->
+          Logger.error("API error with feedbacks: #{inspect reason}")
+          { :ignore, reason }
+      end
+    end)
   end
 
   defp filter_feedbacks_by_tag(feedbacks, tag) do
@@ -156,23 +167,30 @@ defmodule Tribevibe.Core do
       groupNames: groupNames
     }
 
-    case HTTPoison.post(url, Poison.encode!(params), headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        body
-        |> Poison.decode!
-        |> Map.get("data")
-        |> Map.get("weeklyReports")
-        |> Enum.map(fn(%{"metricsValues" => metricsValues, "groupName" => groupName}) ->
-          %{name: groupName,
-            value: Map.get(Enum.find(metricsValues, fn(%{"id" => id} = _metric) -> id === "Engagement" end), "value", 0)}
-        end)
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch engagements")
-        []
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with engagements: #{inspect reason}")
-        reason
-    end
+    cache_key = url <> "#" <> inspect params
+
+    Cachex.get!(:officevibe_cache, cache_key, fallback: fn(_request_url) ->
+      case HTTPoison.post(url, Poison.encode!(params), headers) do
+        {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+          response = body
+          |> Poison.decode!
+          |> Map.get("data")
+          |> Map.get("weeklyReports")
+          |> Enum.map(fn(%{"metricsValues" => metricsValues, "groupName" => groupName}) ->
+            %{name: groupName,
+              value: Map.get(Enum.find(metricsValues, fn(%{"id" => id} = _metric) -> id === "Engagement" end), "value", 0)}
+          end)
+
+          { :commit, response }
+        {:ok, %HTTPoison.Response{status_code: 404}} ->
+          Logger.error("Failed to fetch engagements")
+          []
+          { :ignore, [] }
+        {:error, %HTTPoison.Error{reason: reason}} ->
+          Logger.error("API error with engagements: #{inspect reason}")
+          { :ignore, reason }
+      end
+    end)
   end
 
   @doc """
@@ -187,24 +205,28 @@ defmodule Tribevibe.Core do
       groupNames: groupName
     }
 
-    case HTTPoison.post(url, Poison.encode!(params), headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        metrics = body
-        |> pick_whitelisted_metrics(@metrics_whitelist)
-        |> reverse_metrics_values
+    cache_key = url <> "#" <> inspect params
 
-        engagement = body
-        |> pick_whitelisted_metrics(["Engagement"])
-        |> List.first
+    Cachex.get!(:officevibe_cache, cache_key, fallback: fn(_request_url) ->
+      case HTTPoison.post(url, Poison.encode!(params), headers) do
+        {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+          metrics = body
+          |> pick_whitelisted_metrics(@metrics_whitelist)
+          |> reverse_metrics_values
 
-        %{metrics: metrics, engagement: engagement}
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        Logger.error("Failed to fetch engagements (metrics)")
-        []
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.error("API error with engagements (metrics): #{inspect reason}")
-        reason
-    end
+          engagement = body
+          |> pick_whitelisted_metrics(["Engagement"])
+          |> List.first
+
+          { :commit, %{metrics: metrics, engagement: engagement} }
+        {:ok, %HTTPoison.Response{status_code: 404}} ->
+          Logger.error("Failed to fetch engagements (metrics)")
+          { :ignore, %{metrics: [], engagement: %{}} }
+        {:error, %HTTPoison.Error{reason: reason}} ->
+          Logger.error("API error with engagements (metrics): #{inspect reason}")
+          { :ignore, reason }
+      end
+    end)
   end
 
   defp pick_whitelisted_metrics(body, whitelist) do

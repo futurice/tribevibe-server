@@ -10,8 +10,10 @@ defmodule Tribevibe.Application do
     children = [
       # Start the endpoint when the application starts
       supervisor(TribevibeWeb.Endpoint, []),
-      # Start your own worker by calling: Tribevibe.Worker.start_link(arg1, arg2, arg3)
-      # worker(Tribevibe.Worker, [arg1, arg2, arg3]),
+      # Start cache worker
+      worker(Cachex, [:officevibe_cache, [
+        default_ttl: :timer.seconds(System.get_env("OFFICEVIBE_CACHE_TTL") |> String.to_integer)
+      ]])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
