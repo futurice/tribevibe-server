@@ -189,8 +189,13 @@ defmodule Tribevibe.Core do
 
     case HTTPoison.post(url, Poison.encode!(params), headers) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        metrics = pick_whitelisted_metrics(body, @metrics_whitelist)
-        engagement = pick_whitelisted_metrics(body, ["Engagement"]) |> List.first
+        metrics = body
+        |> pick_whitelisted_metrics(@metrics_whitelist)
+        |> reverse_metrics_values
+
+        engagement = body
+        |> pick_whitelisted_metrics(["Engagement"])
+        |> List.first
 
         %{metrics: metrics, engagement: engagement}
       {:ok, %HTTPoison.Response{status_code: 404}} ->
@@ -220,6 +225,12 @@ defmodule Tribevibe.Core do
       %{id: head["id"],
         name: head["displayName"],
         values: Enum.map(weeklyMetrics, fn(metric) -> Map.take(metric, ["value", "date"]) end)}
+    end)
+  end
+
+  defp reverse_metrics_values(metrics) do
+    Enum.map(metrics, fn(%{values: values} = metric) ->
+      %{metric | values: Enum.reverse(values)}
     end)
   end
 
