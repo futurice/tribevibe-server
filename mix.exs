@@ -39,7 +39,6 @@ defmodule Tribevibe.Mixfile do
       {:gettext, "0.13.1"},
       {:cowboy, "~> 1.0"},
       {:phoenix_swagger, "~> 0.7.0"},
-      {:corsica, "~> 1.0"},
       {:httpoison, "~> 1.0"},
       {:timex, "~> 3.1"},
       {:cachex, "~> 2.1"}
