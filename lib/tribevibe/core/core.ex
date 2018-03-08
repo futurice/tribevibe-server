@@ -72,7 +72,8 @@ defmodule Tribevibe.Core do
     headers = ["Authorization": "Bearer #{token}"]
     options = [
       params: %{
-        groupName: groupName
+        groupName: groupName,
+        fromDate: Timex.shift(Timex.today, months: -1) |> Timex.format!("{ISOdate}")
       }
     ]
 
