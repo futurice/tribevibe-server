@@ -208,8 +208,9 @@ defmodule TribevibeWeb.VibeController do
         title "FeedbackBlock"
         description "Block containting positive and constructive feedback"
         properties do
-          positive Schema.ref(:Feedbacks), "Newest positive #public feedbacks."
-          constructive Schema.ref(:Feedbacks), "Newest constructive #public feedbacks."
+          positive Schema.ref(:Feedbacks), "Newest #public feedbacks tagged Positive."
+          constructive Schema.ref(:Feedbacks), "Newest #public feedbacks tagged Constructive."
+          poll_feedback Schema.ref(:Feedbacks), "Newest #public feedbacks tagged Poll Feedback."
         end
       end,
       Dashboard: swagger_schema do
