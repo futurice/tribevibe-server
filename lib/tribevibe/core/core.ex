@@ -2,7 +2,6 @@ defmodule Tribevibe.Core do
   @moduledoc """
   The core functionality.
   """
-
   require Logger
   use Timex
 
@@ -163,7 +162,7 @@ defmodule Tribevibe.Core do
     headers = ["Authorization": "Bearer #{token}", "Content-Type": "application/json"]
     params = %{
       dates: [
-        Timex.format!(Timex.today, "{ISOdate}")
+        Timex.format!(Timex.shift(Timex.today, days: -1), "{ISOdate}")
       ],
       groupNames: groupNames
     }
