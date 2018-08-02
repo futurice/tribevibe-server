@@ -274,11 +274,15 @@
       "title": "FeedbackBlock",
       "properties": {
         "positive": {
-          "description": "Newest positive #public feedbacks.",
+          "description": "Newest #public feedbacks tagged Positive.",
+          "$ref": "#/definitions/Feedbacks"
+        },
+        "poll_feedback": {
+          "description": "Newest #public feedbacks tagged Poll Feedback.",
           "$ref": "#/definitions/Feedbacks"
         },
         "constructive": {
-          "description": "Newest constructive #public feedbacks.",
+          "description": "Newest #public feedbacks tagged Constructive.",
           "$ref": "#/definitions/Feedbacks"
         }
       },

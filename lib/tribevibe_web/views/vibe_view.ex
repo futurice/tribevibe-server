@@ -13,7 +13,8 @@ defmodule TribevibeWeb.VibeView do
   def render("feedbacks.json", %{feedbacks: feedbacks}) do
     %{
       positive: render_many(feedbacks.positive, VibeView, "feedback.json"),
-      constructive: render_many(feedbacks.constructive, VibeView, "feedback.json")
+      constructive: render_many(feedbacks.constructive, VibeView, "feedback.json"),
+      poll_feedback: render_many(feedbacks.poll_feedback, VibeView, "feedback.json")
     }
   end
 
@@ -37,10 +38,7 @@ defmodule TribevibeWeb.VibeView do
     %{engagements: render_many(dashboard.engagements, VibeView, "engagement.json"),
       engagement: dashboard.engagement,
       metrics: dashboard.metrics,
-      feedbacks: %{
-        positive: render_many(dashboard.feedbacks.positive, VibeView, "feedback.json"),
-        constructive: render_many(dashboard.feedbacks.constructive, VibeView, "feedback.json")
-      }
+      feedbacks: render("feedbacks.json", %{feedbacks: dashboard.feedbacks})
     }
   end
 

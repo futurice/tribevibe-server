@@ -102,10 +102,17 @@ defmodule Tribevibe.Core do
           |> sort_by_newest
           |> Enum.take(10)
 
-          { :commit, %{positive: positive, constructive: constructive} }
+          poll_feedback = feedbacks
+          |> filter_feedbacks_by_tag("Poll Feedback")
+          |> filter_public_feedbacks
+          |> mark_original_posters
+          |> sort_by_newest
+          |> Enum.take(10)
+
+          { :commit, %{positive: positive, constructive: constructive, poll_feedback: poll_feedback} }
         {:ok, %HTTPoison.Response{status_code: 404}} ->
           Logger.error("Failed to fetch feedbacks")
-          { :ignore, %{positive: [], constructive: []} }
+          { :ignore, %{positive: [], constructive: [], poll_feedback: []} }
         {:error, %HTTPoison.Error{reason: reason}} ->
           Logger.error("API error with feedbacks: #{inspect reason}")
           { :ignore, reason }
