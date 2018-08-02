@@ -77,5 +77,5 @@ If connection to Officevibe API does not work, make sure that env variables are 
 You can view application logs with
 
 ```
-playswarm app:logs -n tribevibe-server
+playswarm app:logs -n tribevibe-server | sort
 ```
